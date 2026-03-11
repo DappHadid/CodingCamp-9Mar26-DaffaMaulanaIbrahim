@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TaskListComponent Verification</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .task-list {
+            list-style: none;
+            padding: 0;
+        }
+        .task-item {
+            padding: 10px;
+            margin: 5px 0;
+            border: 1px solid #eee;
+            border-radius: 3px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .task-item.completed {
+            background-color: #f0f0f0;
+        }
+        .task-item.completed .task-description {
+            text-decoration: line-through;
+            color: #888;
+        }
+        .task-description {
+            flex: 1;
+        }
+        button {
+            padding: 5px 10px;
+            cursor: pointer;
+        }
+        .edit-input {
+            flex: 1;
+            padding: 5px;
+        }
+        .empty-message {
+            color: #888;
+            font-style: italic;
+        }
+        .test-controls {
+            margin: 10px 0;
+        }
+        .test-controls input {
+            padding: 5px;
+            width: 300px;
+        }
+        .test-controls button {
+            padding: 5px 15px;
+            margin-left: 5px;
+        }
+        .result {
+            margin-top: 10px;
+            padding: 10px;
+            background-color: #f9f9f9;
+            border-radius: 3px;
+        }
+        .success {
+            color: green;
+        }
+        .error {
+            color: red;
+        }
+    </style>
+</head>
+<body>
+    <h1>TaskListComponent Verification</h1>
+
+    <div class="test-section">
+        <h2>Test Controls</h2>
+        <div class="test-controls">
+            <input type="text" id="task-input" placeholder="Enter task description" maxlength="500">
+            <button onclick="testAddTask()">Add Task</button>
+            <button onclick="testAddEmptyTask()">Test Empty Task</button>
+            <button onclick="testAddLongTask()">Test 500 Char Task</button>
+            <button onclick="testClearStorage()">Clear Storage</button>
+        </div>
+        <div id="test-result" class="result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>Task List</h2>
+        <div id="tasklist-container"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>Storage Contents</h2>
+        <pre id="storage-contents"></pre>
+    </div>
+
+    <script src="js/StorageManager.js"></script>
+    <script src="js/TaskListComponent.js"></script>
+    <script>
+        let taskList;
+
+        // Initialize component
+        document.addEventListener('DOMContentLoaded', () => {
+            const container = document.getElementById('tasklist-container');
+            taskList = new TaskListComponent(container);
+            taskList.init();
+            updateStorageDisplay();
+        });
+
+        function testAddTask() {
+            const input = document.getElementById('task-input');
+            const description = input.value;
+            const result = taskList.addTask(description);
+            
+            if (result) {
+                showResult(`✓ Task added: "${result.description}"`, 'success');
+                input.value = '';
+            } else {
+                showResult('✗ Failed to add task (validation failed)', 'error');
+            }
+            updateStorageDisplay();
+        }
+
+        function testAddEmptyTask() {
+            const result = taskList.addTask('   ');
+            if (result === null) {
+                showResult('✓ Empty task correctly rejected', 'success');
+            } else {
+                showResult('✗ Empty task was incorrectly accepted', 'error');
+            }
+            updateStorageDisplay();
+        }
+
+        function testAddLongTask() {
+            const longTask = 'A'.repeat(500);
+            const result = taskList.addTask(longTask);
+            if (result) {
+                showResult(`✓ 500 character task accepted (length: ${result.description.length})`, 'success');
+            } else {
+                showResult('✗ 500 character task rejected', 'error');
+            }
+            
+            // Test 501 characters
+            const tooLongTask = 'A'.repeat(501);
+            const result2 = taskList.addTask(tooLongTask);
+            if (result2 === null) {
+                showResult('✓ 501 character task correctly rejected', 'success');
+            } else {
+                showResult('✗ 501 character task was incorrectly accepted', 'error');
+            }
+            updateStorageDisplay();
+        }
+
+        function testClearStorage() {
+            StorageManager.clear();
+            taskList.loadTasks();
+            taskList.render();
+            showResult('✓ Storage cleared and tasks reloaded', 'success');
+            updateStorageDisplay();
+        }
+
+        function showResult(message, type) {
+            const resultDiv = document.getElementById('test-result');
+            const p = document.createElement('p');
+            p.className = type;
+            p.textContent = message;
+            resultDiv.appendChild(p);
+            
+            // Auto-clear after 5 seconds
+            setTimeout(() => {
+                resultDiv.innerHTML = '';
+            }, 5000);
+        }
+
+        function updateStorageDisplay() {
+            const storageDiv = document.getElementById('storage-contents');
+            const tasks = StorageManager.get('tasks', []);
+            storageDiv.textContent = JSON.stringify(tasks, null, 2);
+        }
+    </script>
+</body>
+</html>

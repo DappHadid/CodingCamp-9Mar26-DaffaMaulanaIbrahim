@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Component Verification</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+        }
+        .test-result {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+        }
+        .pass {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .fail {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .component-demo {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Component Verification</h1>
+    <div id="results"></div>
+    
+    <h2>Component Demos</h2>
+    <div class="component-demo">
+        <h3>Greeting Component</h3>
+        <div id="greeting-test"></div>
+    </div>
+    
+    <div class="component-demo">
+        <h3>Timer Component</h3>
+        <div id="timer-test"></div>
+    </div>
+
+    <script src="js/StorageManager.js"></script>
+    <script src="js/GreetingComponent.js"></script>
+    <script src="js/TimerComponent.js"></script>
+    <script>
+        const results = [];
+        
+        function addResult(name, passed, message) {
+            results.push({ name, passed, message });
+        }
+        
+        function displayResults() {
+            const container = document.getElementById('results');
+            container.innerHTML = results.map(r => 
+                `<div class="test-result ${r.passed ? 'pass' : 'fail'}">
+                    <strong>${r.passed ? '✓' : '✗'} ${r.name}</strong>
+                    ${r.message ? `<br>${r.message}` : ''}
+                </div>`
+            ).join('');
+        }
+        
+        // Test StorageManager
+        try {
+            if (typeof StorageManager !== 'undefined') {
+                addResult('StorageManager exists', true);
+                
+                // Test basic methods
+                if (typeof StorageManager.get === 'function' &&
+                    typeof StorageManager.set === 'function' &&
+                    typeof StorageManager.remove === 'function' &&
+                    typeof StorageManager.clear === 'function') {
+                    addResult('StorageManager has all required methods', true);
+                    
+                    // Test basic functionality
+                    const testKey = '__test_key__';
+                    const testValue = { test: 'data' };
+                    StorageManager.set(testKey, testValue);
+                    const retrieved = StorageManager.get(testKey);
+                    
+                    if (JSON.stringify(retrieved) === JSON.stringify(testValue)) {
+                        addResult('StorageManager set/get works', true);
+                    } else {
+                        addResult('StorageManager set/get works', false, 'Retrieved value does not match');
+                    }
+                    
+                    StorageManager.remove(testKey);
+                } else {
+                    addResult('StorageManager has all required methods', false, 'Missing methods');
+                }
+            } else {
+                addResult('StorageManager exists', false, 'StorageManager is not defined');
+            }
+        } catch (error) {
+            addResult('StorageManager', false, error.message);
+        }
+        
+        // Test GreetingComponent
+        try {
+            if (typeof GreetingComponent !== 'undefined') {
+                addResult('GreetingComponent exists', true);
+                
+                const greetingContainer = document.getElementById('greeting-test');
+                const greeting = new GreetingComponent(greetingContainer);
+                
+                if (typeof greeting.init === 'function' &&
+                    typeof greeting.updateTime === 'function' &&
+                    typeof greeting.getGreeting === 'function' &&
+                    typeof greeting.formatTime === 'function' &&
+                    typeof greeting.formatDate === 'function' &&
+                    typeof greeting.destroy === 'function') {
+                    addResult('GreetingComponent has all required methods', true);
+                    
+                    // Test greeting logic
+                    const morningGreeting = greeting.getGreeting(10);
+                    const afternoonGreeting = greeting.getGreeting(14);
+                    const eveningGreeting = greeting.getGreeting(19);
+                    const nightGreeting = greeting.getGreeting(23);
+                    
+                    if (morningGreeting === 'Good morning' &&
+                        afternoonGreeting === 'Good afternoon' &&
+                        eveningGreeting === 'Good evening' &&
+                        nightGreeting === 'Good night') {
+                        addResult('GreetingComponent greeting logic works', true);
+                    } else {
+                        addResult('GreetingComponent greeting logic works', false, 
+                            `Got: ${morningGreeting}, ${afternoonGreeting}, ${eveningGreeting}, ${nightGreeting}`);
+                    }
+                    
+                    // Initialize and check display
+                    greeting.init();
+                    if (greetingContainer.innerHTML.includes('greeting-message') &&
+                        greetingContainer.innerHTML.includes('time-display') &&
+                        greetingContainer.innerHTML.includes('date-display')) {
+                        addResult('GreetingComponent renders correctly', true);
+                    } else {
+                        addResult('GreetingComponent renders correctly', false, 'Missing expected elements');
+                    }
+                    
+                    greeting.destroy();
+                } else {
+                    addResult('GreetingComponent has all required methods', false, 'Missing methods');
+                }
+            } else {
+                addResult('GreetingComponent exists', false, 'GreetingComponent is not defined');
+            }
+        } catch (error) {
+            addResult('GreetingComponent', false, error.message);
+        }
+        
+        // Test TimerComponent
+        try {
+            if (typeof TimerComponent !== 'undefined') {
+                addResult('TimerComponent exists', true);
+                
+                const timerContainer = document.getElementById('timer-test');
+                const timer = new TimerComponent(timerContainer);
+                
+                if (typeof timer.init === 'function' &&
+                    typeof timer.start === 'function' &&
+                    typeof timer.stop === 'function' &&
+                    typeof timer.reset === 'function' &&
+                    typeof timer.tick === 'function' &&
+                    typeof timer.formatTime === 'function' &&
+                    typeof timer.destroy === 'function') {
+                    addResult('TimerComponent has all required methods', true);
+                    
+                    // Test initialization
+                    timer.init();
+                    if (timer.duration === 1500 && timer.remaining === 1500 && timer.state === 'idle') {
+                        addResult('TimerComponent initializes correctly', true, '25 minutes (1500 seconds)');
+                    } else {
+                        addResult('TimerComponent initializes correctly', false, 
+                            `Duration: ${timer.duration}, Remaining: ${timer.remaining}, State: ${timer.state}`);
+                    }
+                    
+                    // Test time formatting
+                    const formatted = timer.formatTime(1500);
+                    if (formatted === '25:00') {
+                        addResult('TimerComponent formatTime works', true);
+                    } else {
+                        addResult('TimerComponent formatTime works', false, `Got: ${formatted}`);
+                    }
+                    
+                    // Test render
+                    if (timerContainer.innerHTML.includes('timer-display') &&
+                        timerContainer.innerHTML.includes('timer-controls')) {
+                        addResult('TimerComponent renders correctly', true);
+                    } else {
+                        addResult('TimerComponent renders correctly', false, 'Missing expected elements');
+                    }
+                    
+                    timer.destroy();
+                } else {
+                    addResult('TimerComponent has all required methods', false, 'Missing methods');
+                }
+            } else {
+                addResult('TimerComponent exists', false, 'TimerComponent is not defined');
+            }
+        } catch (error) {
+            addResult('TimerComponent', false, error.message);
+        }
+        
+        // Display all results
+        displayResults();
+        
+        // Summary
+        const passed = results.filter(r => r.passed).length;
+        const total = results.length;
+        console.log(`Verification complete: ${passed}/${total} tests passed`);
+        
+        if (passed === total) {
+            console.log('✓ All core components verified successfully!');
+        } else {
+            console.error(`✗ ${total - passed} test(s) failed`);
+        }
+    </script>
+</body>
+</html>

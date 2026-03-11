@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Checkpoint 10 Verification</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .test-section {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .test-result {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+        }
+        .pass {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .fail {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        h1 {
+            color: #333;
+        }
+        h2 {
+            color: #666;
+            margin-top: 0;
+        }
+        .summary {
+            font-size: 1.2em;
+            font-weight: bold;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 8px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Checkpoint 10: Complete Application Verification</h1>
+    
+    <div id="results"></div>
+    
+    <script src="js/StorageManager.js"></script>
+    <script src="js/GreetingComponent.js"></script>
+    <script src="js/TimerComponent.js"></script>
+    <script src="js/TaskListComponent.js"></script>
+    <script src="js/QuickLinksComponent.js"></script>
+    
+    <script>
+        const results = [];
+        
+        function test(name, fn) {
+            try {
+                fn();
+                results.push({ name, pass: true });
+            } catch (error) {
+                results.push({ name, pass: false, error: error.message });
+            }
+        }
+        
+        function assert(condition, message) {
+            if (!condition) {
+                throw new Error(message || 'Assertion failed');
+            }
+        }
+        
+        // Test 1: StorageManager exists and has required methods
+        test('StorageManager class exists', () => {
+            assert(typeof StorageManager !== 'undefined', 'StorageManager is not defined');
+            assert(typeof StorageManager.get === 'function', 'StorageManager.get is not a function');
+            assert(typeof StorageManager.set === 'function', 'StorageManager.set is not a function');
+            assert(typeof StorageManager.remove === 'function', 'StorageManager.remove is not a function');
+            assert(typeof StorageManager.clear === 'function', 'StorageManager.clear is not a function');
+        });
+        
+        // Test 2: StorageManager basic operations
+        test('StorageManager can store and retrieve data', () => {
+            const testData = { test: 'value', number: 42 };
+            StorageManager.set('test-key', testData);
+            const retrieved = StorageManager.get('test-key');
+            assert(retrieved.test === 'value', 'Retrieved data does not match');
+            assert(retrieved.number === 42, 'Retrieved number does not match');
+            StorageManager.remove('test-key');
+        });
+        
+        // Test 3: GreetingComponent exists and can be instantiated
+        test('GreetingComponent class exists', () => {
+            assert(typeof GreetingComponent !== 'undefined', 'GreetingComponent is not defined');
+            const container = document.createElement('div');
+            const component = new GreetingComponent(container);
+            assert(component !== null, 'Failed to create GreetingComponent instance');
+            assert(typeof component.init === 'function', 'GreetingComponent.init is not a function');
+            assert(typeof component.getGreeting === 'function', 'GreetingComponent.getGreeting is not a function');
+        });
+        
+        // Test 4: GreetingComponent greeting logic
+        test('GreetingComponent greeting logic works correctly', () => {
+            const container = document.createElement('div');
+            const component = new GreetingComponent(container);
+            assert(component.getGreeting(10) === 'Good morning', 'Morning greeting incorrect');
+            assert(component.getGreeting(14) === 'Good afternoon', 'Afternoon greeting incorrect');
+            assert(component.getGreeting(18) === 'Good evening', 'Evening greeting incorrect');
+            assert(component.getGreeting(22) === 'Good night', 'Night greeting incorrect');
+        });
+        
+        // Test 5: TimerComponent exists and can be instantiated
+        test('TimerComponent class exists', () => {
+            assert(typeof TimerComponent !== 'undefined', 'TimerComponent is not defined');
+            const container = document.createElement('div');
+            const component = new TimerComponent(container);
+            assert(component !== null, 'Failed to create TimerComponent instance');
+            assert(typeof component.init === 'function', 'TimerComponent.init is not a function');
+            assert(typeof component.start === 'function', 'TimerComponent.start is not a function');
+            assert(typeof component.stop === 'function', 'TimerComponent.stop is not a function');
+            assert(typeof component.reset === 'function', 'TimerComponent.reset is not a function');
+        });
+        
+        // Test 6: TimerComponent initialization
+        test('TimerComponent initializes with 25 minutes', () => {
+            const container = document.createElement('div');
+            const component = new TimerComponent(container);
+            component.init();
+            assert(component.duration === 1500, 'Timer duration should be 1500 seconds');
+            assert(component.remaining === 1500, 'Timer remaining should be 1500 seconds');
+            assert(component.state === 'idle', 'Timer state should be idle');
+        });
+        
+        // Test 7: TaskListComponent exists and can be instantiated
+        test('TaskListComponent class exists', () => {
+            assert(typeof TaskListComponent !== 'undefined', 'TaskListComponent is not defined');
+            const container = document.createElement('div');
+            container.innerHTML = '<div class="task-input-container"></div><div class="task-list"></div>';
+            const component = new TaskListComponent(container);
+            assert(component !== null, 'Failed to create TaskListComponent instance');
+            assert(typeof component.init === 'function', 'TaskListComponent.init is not a function');
+            assert(typeof component.addTask === 'function', 'TaskListComponent.addTask is not a function');
+            assert(typeof component.toggleTask === 'function', 'TaskListComponent.toggleTask is not a function');
+            assert(typeof component.editTask === 'function', 'TaskListComponent.editTask is not a function');
+            assert(typeof component.deleteTask === 'function', 'TaskListComponent.deleteTask is not a function');
+        });
+        
+        // Test 8: TaskListComponent basic operations
+        test('TaskListComponent can add and delete tasks', () => {
+            StorageManager.remove('tasks'); // Clean slate
+            const container = document.createElement('div');
+            container.innerHTML = '<div class="task-input-container"></div><div class="task-list"></div>';
+            const component = new TaskListComponent(container);
+            component.init();
+            
+            const task = component.addTask('Test task');
+            assert(task !== null, 'Failed to add task');
+            assert(component.tasks.length === 1, 'Task list should have 1 task');
+            
+            const deleted = component.deleteTask(task.id);
+            assert(deleted === true, 'Failed to delete task');
+            assert(component.tasks.length === 0, 'Task list should be empty');
+            
+            StorageManager.remove('tasks'); // Cleanup
+        });
+        
+        // Test 9: TaskListComponent validation
+        test('TaskListComponent rejects empty tasks', () => {
+            const container = document.createElement('div');
+            container.innerHTML = '<div class="task-input-container"></div><div class="task-list"></div>';
+            const component = new TaskListComponent(container);
+            component.init();
+            
+            const result1 = component.addTask('');
+            assert(result1 === null, 'Should reject empty string');
+            
+            const result2 = component.addTask('   ');
+            assert(result2 === null, 'Should reject whitespace-only string');
+            
+            StorageManager.remove('tasks'); // Cleanup
+        });
+        
+        // Test 10: QuickLinksComponent exists and can be instantiated
+        test('QuickLinksComponent class exists', () => {
+            assert(typeof QuickLinksComponent !== 'undefined', 'QuickLinksComponent is not defined');
+            const container = document.createElement('div');
+            container.innerHTML = '<div class="quicklinks-input-container"></div><div class="quicklinks-list"></div>';
+            const component = new QuickLinksComponent(container);
+            assert(component !== null, 'Failed to create QuickLinksComponent instance');
+            assert(typeof component.init === 'function', 'QuickLinksComponent.init is not a function');
+            assert(typeof component.addLink === 'function', 'QuickLinksComponent.addLink is not a function');
+            assert(typeof component.deleteLink === 'function', 'QuickLinksComponent.deleteLink is not a function');
+            assert(typeof component.validateUrl === 'function', 'QuickLinksComponent.validateUrl is not a function');
+        });
+        
+        // Test 11: QuickLinksComponent URL validation
+        test('QuickLinksComponent validates URLs correctly', () => {
+            const container = document.createElement('div');
+            container.innerHTML = '<div class="quicklinks-input-container"></div><div class="quicklinks-list"></div>';
+            const component = new QuickLinksComponent(container);
+            
+            assert(component.validateUrl('https://example.com') === true, 'Should accept valid HTTPS URL');
+            assert(component.validateUrl('http://example.com') === true, 'Should accept valid HTTP URL');
+            assert(component.validateUrl('example.com') === false, 'Should reject URL without protocol');
+            assert(component.validateUrl('') === false, 'Should reject empty URL');
+            assert(component.validateUrl('not a url') === false, 'Should reject invalid URL');
+        });
+        
+        // Test 12: QuickLinksComponent basic operations
+        test('QuickLinksComponent can add and delete links', () => {
+            StorageManager.remove('quickLinks'); // Clean slate
+            const container = document.createElement('div');
+            container.innerHTML = '<div class="quicklinks-input-container"></div><div class="quicklinks-list"></div>';
+            const component = new QuickLinksComponent(container);
+            component.init();
+            
+            const link = component.addLink('Test Link', 'https://example.com');
+            assert(link !== null, 'Failed to add link');
+            assert(component.links.length === 1, 'Links list should have 1 link');
+            
+            const deleted = component.deleteLink(link.id);
+            assert(deleted === true, 'Failed to delete link');
+            assert(component.links.length === 0, 'Links list should be empty');
+            
+            StorageManager.remove('quickLinks'); // Cleanup
+        });
+        
+        // Display results
+        const resultsDiv = document.getElementById('results');
+        const passed = results.filter(r => r.pass).length;
+        const failed = results.filter(r => !r.pass).length;
+        const total = results.length;
+        
+        let html = `<div class="summary ${failed === 0 ? 'pass' : 'fail'}">
+            Tests: ${passed}/${total} passed, ${failed} failed
+        </div>`;
+        
+        results.forEach(result => {
+            html += `<div class="test-section">
+                <div class="test-result ${result.pass ? 'pass' : 'fail'}">
+                    ${result.pass ? '✓' : '✗'} ${result.name}
+                    ${result.error ? `<br><small>Error: ${result.error}</small>` : ''}
+                </div>
+            </div>`;
+        });
+        
+        resultsDiv.innerHTML = html;
+        
+        console.log(`Checkpoint 10 Verification: ${passed}/${total} tests passed`);
+    </script>
+</body>
+</html>

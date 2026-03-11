@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>QuickLinks Component Verification</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 800px;
+      margin: 50px auto;
+      padding: 20px;
+    }
+    .test-section {
+      margin: 20px 0;
+      padding: 15px;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+    }
+    .test-result {
+      padding: 10px;
+      margin: 5px 0;
+      border-radius: 3px;
+    }
+    .pass {
+      background-color: #d4edda;
+      color: #155724;
+    }
+    .fail {
+      background-color: #f8d7da;
+      color: #721c24;
+    }
+    #quicklinks-container {
+      margin: 20px 0;
+      padding: 15px;
+      border: 2px solid #007bff;
+      border-radius: 5px;
+      min-height: 100px;
+    }
+  </style>
+</head>
+<body>
+  <h1>QuickLinks Component Verification</h1>
+  
+  <div class="test-section">
+    <h2>Component Tests</h2>
+    <div id="test-results"></div>
+  </div>
+
+  <div class="test-section">
+    <h2>Visual Test</h2>
+    <div id="quicklinks-container"></div>
+  </div>
+
+  <script src="js/StorageManager.js"></script>
+  <script src="js/QuickLinksComponent.js"></script>
+  <script>
+    const resultsDiv = document.getElementById('test-results');
+    
+    function addResult(testName, passed, message = '') {
+      const div = document.createElement('div');
+      div.className = `test-result ${passed ? 'pass' : 'fail'}`;
+      div.textContent = `${passed ? '✓' : '✗'} ${testName}${message ? ': ' + message : ''}`;
+      resultsDiv.appendChild(div);
+    }
+
+    // Clear storage before tests
+    StorageManager.clear();
+
+    // Test 1: Component initialization
+    const container = document.getElementById('quicklinks-container');
+    const component = new QuickLinksComponent(container);
+    component.init();
+    addResult('Component initialization', component.links !== undefined);
+
+    // Test 2: Add valid link
+    const link1 = component.addLink('GitHub', 'https://github.com');
+    addResult('Add valid link', link1 !== null && link1.name === 'GitHub');
+
+    // Test 3: Validate URL with http://
+    const link2 = component.addLink('Example', 'http://example.com');
+    addResult('Add link with http://', link2 !== null);
+
+    // Test 4: Reject empty name
+    const link3 = component.addLink('', 'https://test.com');
+    addResult('Reject empty name', link3 === null);
+
+    // Test 5: Reject whitespace-only name
+    const link4 = component.addLink('   ', 'https://test.com');
+    addResult('Reject whitespace-only name', link4 === null);
+
+    // Test 6: Reject name over 50 characters
+    const longName = 'a'.repeat(51);
+    const link5 = component.addLink(longName, 'https://test.com');
+    addResult('Reject name over 50 characters', link5 === null);
+
+    // Test 7: Accept name exactly 50 characters
+    const exactName = 'a'.repeat(50);
+    const link6 = component.addLink(exactName, 'https://test.com');
+    addResult('Accept name exactly 50 characters', link6 !== null);
+
+    // Test 8: Reject invalid URL (no protocol)
+    const link7 = component.addLink('Test', 'example.com');
+    addResult('Reject URL without protocol', link7 === null);
+
+    // Test 9: Reject empty URL
+    const link8 = component.addLink('Test', '');
+    addResult('Reject empty URL', link8 === null);
+
+    // Test 10: Reject invalid URL format
+    const link9 = component.addLink('Test', 'not a url');
+    addResult('Reject invalid URL format', link9 === null);
+
+    // Test 11: Trim name whitespace
+    const link10 = component.addLink('  Trimmed  ', 'https://test.com');
+    addResult('Trim name whitespace', link10 !== null && link10.name === 'Trimmed');
+
+    // Test 12: Delete link
+    const linkToDelete = component.addLink('Delete Me', 'https://delete.com');
+    const beforeCount = component.links.length;
+    const deleted = component.deleteLink(linkToDelete.id);
+    addResult('Delete link', deleted && component.links.length === beforeCount - 1);
+
+    // Test 13: Delete non-existent link
+    const deletedNonExistent = component.deleteLink('non-existent-id');
+    addResult('Delete non-existent link returns false', !deletedNonExistent);
+
+    // Test 14: Persistence - save and load
+    const currentLinks = component.links.length;
+    component.saveLinks();
+    const newComponent = new QuickLinksComponent(container);
+    newComponent.loadLinks();
+    addResult('Persistence round-trip', newComponent.links.length === currentLinks);
+
+    // Test 15: Generate unique IDs
+    const id1 = component.generateId();
+    const id2 = component.generateId();
+    addResult('Generate unique IDs', id1 !== id2);
+
+    // Test 16: Validate URL method
+    addResult('validateUrl accepts https://', component.validateUrl('https://example.com'));
+    addResult('validateUrl accepts http://', component.validateUrl('http://example.com'));
+    addResult('validateUrl rejects no protocol', !component.validateUrl('example.com'));
+    addResult('validateUrl rejects empty', !component.validateUrl(''));
+    addResult('validateUrl rejects null', !component.validateUrl(null));
+
+    // Test 17: Link object structure
+    const testLink = component.addLink('Structure Test', 'https://test.com');
+    const hasCorrectStructure = testLink && 
+      testLink.id && 
+      testLink.name === 'Structure Test' && 
+      testLink.url === 'https://test.com' && 
+      typeof testLink.createdAt === 'number';
+    addResult('Link object has correct structure', hasCorrectStructure);
+
+    // Test 18: Render method doesn't crash
+    try {
+      component.render();
+      addResult('Render method executes without error', true);
+    } catch (error) {
+      addResult('Render method executes without error', false, error.message);
+    }
+
+    console.log('All tests completed. Check results above.');
+  </script>
+</body>
+</html>

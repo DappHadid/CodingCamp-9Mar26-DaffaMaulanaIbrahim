@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="description" content="A simple life dashboard with tasks, timer, and quick links">
+    <title>Life Dashboard</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <main class="dashboard">
+        <header class="dashboard-header">
+            <div id="greeting-container" class="greeting-component"></div>
+        </header>
+
+        <section class="dashboard-content">
+            <div class="component-grid">
+                <div id="timer-container" class="timer-component">
+                    <h2>Focus Timer</h2>
+                    <div class="timer-display"></div>
+                    <div class="timer-controls"></div>
+                </div>
+
+                <div id="tasklist-container" class="tasklist-component">
+                    <h2>Tasks</h2>
+                    <div class="task-input-container"></div>
+                    <div class="task-list"></div>
+                </div>
+
+                <div id="quicklinks-container" class="quicklinks-component">
+                    <h2>Quick Links</h2>
+                    <div class="quicklinks-input-container"></div>
+                    <div class="quicklinks-list"></div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Load dependencies first -->
+    <script src="js/StorageManager.js"></script>
+    <script src="js/GreetingComponent.js"></script>
+    <script src="js/TimerComponent.js"></script>
+    <script src="js/TaskListComponent.js"></script>
+    <script src="js/QuickLinksComponent.js"></script>
+    
+    <!-- Load main app last -->
+    <script src="js/app.js"></script>
+</body>
+</html>

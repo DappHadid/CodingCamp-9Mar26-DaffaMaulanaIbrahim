@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>App Initialization Verification</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 2rem auto;
+            padding: 1rem;
+        }
+        .test-result {
+            padding: 1rem;
+            margin: 0.5rem 0;
+            border-radius: 4px;
+        }
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        .info {
+            background-color: #d1ecf1;
+            color: #0c5460;
+        }
+    </style>
+</head>
+<body>
+    <h1>App Initialization Verification</h1>
+    <div id="test-results"></div>
+
+    <!-- Mock containers for testing -->
+    <div style="display: none;">
+        <div id="greeting-container"></div>
+        <div id="timer-container"></div>
+        <div id="tasklist-container">
+            <div class="task-input-container"></div>
+            <div class="task-list"></div>
+        </div>
+        <div id="quicklinks-container">
+            <div class="quicklinks-input-container"></div>
+            <div class="quicklinks-list"></div>
+        </div>
+    </div>
+
+    <!-- Load components -->
+    <script src="js/StorageManager.js"></script>
+    <script src="js/GreetingComponent.js"></script>
+    <script src="js/TimerComponent.js"></script>
+    <script src="js/TaskListComponent.js"></script>
+    <script src="js/QuickLinksComponent.js"></script>
+
+    <!-- Test script -->
+    <script>
+        const resultsDiv = document.getElementById('test-results');
+
+        function addResult(message, type = 'info') {
+            const div = document.createElement('div');
+            div.className = `test-result ${type}`;
+            div.textContent = message;
+            resultsDiv.appendChild(div);
+        }
+
+        // Test 1: Check if all components are defined
+        addResult('Test 1: Checking if all component classes are defined...', 'info');
+        
+        if (typeof GreetingComponent !== 'undefined') {
+            addResult('✓ GreetingComponent is defined', 'success');
+        } else {
+            addResult('✗ GreetingComponent is not defined', 'error');
+        }
+
+        if (typeof TimerComponent !== 'undefined') {
+            addResult('✓ TimerComponent is defined', 'success');
+        } else {
+            addResult('✗ TimerComponent is not defined', 'error');
+        }
+
+        if (typeof TaskListComponent !== 'undefined') {
+            addResult('✓ TaskListComponent is defined', 'success');
+        } else {
+            addResult('✗ TaskListComponent is not defined', 'error');
+        }
+
+        if (typeof QuickLinksComponent !== 'undefined') {
+            addResult('✓ QuickLinksComponent is defined', 'success');
+        } else {
+            addResult('✗ QuickLinksComponent is not defined', 'error');
+        }
+
+        if (typeof StorageManager !== 'undefined') {
+            addResult('✓ StorageManager is defined', 'success');
+        } else {
+            addResult('✗ StorageManager is not defined', 'error');
+        }
+
+        // Test 2: Initialize components
+        addResult('\nTest 2: Initializing components...', 'info');
+
+        try {
+            const greetingContainer = document.getElementById('greeting-container');
+            const greetingComponent = new GreetingComponent(greetingContainer);
+            greetingComponent.init();
+            addResult('✓ GreetingComponent initialized successfully', 'success');
+        } catch (error) {
+            addResult(`✗ GreetingComponent initialization failed: ${error.message}`, 'error');
+        }
+
+        try {
+            const timerContainer = document.getElementById('timer-container');
+            const timerComponent = new TimerComponent(timerContainer);
+            timerComponent.init();
+            addResult('✓ TimerComponent initialized successfully', 'success');
+        } catch (error) {
+            addResult(`✗ TimerComponent initialization failed: ${error.message}`, 'error');
+        }
+
+        try {
+            const taskListContainer = document.getElementById('tasklist-container');
+            const taskListComponent = new TaskListComponent(taskListContainer);
+            taskListComponent.init();
+            addResult('✓ TaskListComponent initialized successfully', 'success');
+        } catch (error) {
+            addResult(`✗ TaskListComponent initialization failed: ${error.message}`, 'error');
+        }
+
+        try {
+            const quickLinksContainer = document.getElementById('quicklinks-container');
+            const quickLinksComponent = new QuickLinksComponent(quickLinksContainer);
+            quickLinksComponent.init();
+            addResult('✓ QuickLinksComponent initialized successfully', 'success');
+        } catch (error) {
+            addResult(`✗ QuickLinksComponent initialization failed: ${error.message}`, 'error');
+        }
+
+        // Test 3: Check DOM updates
+        addResult('\nTest 3: Checking DOM updates...', 'info');
+
+        const greetingContent = document.getElementById('greeting-container').innerHTML;
+        if (greetingContent.includes('Good')) {
+            addResult('✓ GreetingComponent rendered content', 'success');
+        } else {
+            addResult('✗ GreetingComponent did not render content', 'error');
+        }
+
+        const timerContent = document.getElementById('timer-container').innerHTML;
+        if (timerContent.includes('25:00') || timerContent.includes('timer-display')) {
+            addResult('✓ TimerComponent rendered content', 'success');
+        } else {
+            addResult('✗ TimerComponent did not render content', 'error');
+        }
+
+        const taskListContent = document.getElementById('tasklist-container').innerHTML;
+        if (taskListContent.includes('task-input') || taskListContent.includes('Add Task')) {
+            addResult('✓ TaskListComponent rendered input form', 'success');
+        } else {
+            addResult('✗ TaskListComponent did not render input form', 'error');
+        }
+
+        const quickLinksContent = document.getElementById('quicklinks-container').innerHTML;
+        if (quickLinksContent.includes('link-name-input') || quickLinksContent.includes('Add Link')) {
+            addResult('✓ QuickLinksComponent rendered input form', 'success');
+        } else {
+            addResult('✗ QuickLinksComponent did not render input form', 'error');
+        }
+
+        // Test 4: Test error handling for missing containers
+        addResult('\nTest 4: Testing error handling for missing containers...', 'info');
+
+        try {
+            const missingComponent = new GreetingComponent(null);
+            missingComponent.init();
+            addResult('✓ Component handles null container gracefully', 'success');
+        } catch (error) {
+            addResult(`✗ Component threw error with null container: ${error.message}`, 'error');
+        }
+
+        addResult('\n✓ All tests completed!', 'success');
+    </script>
+</body>
+</html>
