@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Browser Compatibility Test</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        h1 {
+            color: #333;
+            border-bottom: 3px solid #4CAF50;
+            padding-bottom: 10px;
+        }
+        h2 {
+            color: #555;
+            margin-top: 30px;
+        }
+        .test-section {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .test-result {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+            font-family: monospace;
+        }
+        .pass {
+            background: #d4edda;
+            color: #155724;
+            border-left: 4px solid #28a745;
+        }
+        .fail {
+            background: #f8d7da;
+            color: #721c24;
+            border-left: 4px solid #dc3545;
+        }
+        .warning {
+            background: #fff3cd;
+            color: #856404;
+            border-left: 4px solid #ffc107;
+        }
+        .info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border-left: 4px solid #17a2b8;
+        }
+        .code {
+            background: #f4f4f4;
+            padding: 15px;
+            border-radius: 4px;
+            overflow-x: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+        }
+        button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 5px;
+        }
+        button:hover {
+            background: #45a049;
+        }
+        .summary {
+            font-size: 18px;
+            font-weight: bold;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 8px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+        }
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        th {
+            background: #4CAF50;
+            color: white;
+        }
+        tr:hover {
+            background: #f5f5f5;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔍 Browser Compatibility Test Suite</h1>
+    <p>Testing browser compatibility for the To-Do List Life Dashboard</p>
+
+    <div class="test-section">
+        <h2>Test Controls</h2>
+        <button onclick="runAllTests()">Run All Tests</button>
+        <button onclick="clearResults()">Clear Results</button>
+        <button onclick="testBrowserDetection()">Test Browser Detection</button>
+        <button onclick="testLocalStorage()">Test Local Storage</button>
+        <button onclick="testAPIs()">Test Required APIs</button>
+    </div>
+
+    <div id="results"></div>
+
+    <script src="js/BrowserCompatibility.js"></script>
+    <script>
+        let testResults = [];
+
+        function addResult(category, test, status, message, details = '') {
+            testResults.push({ category, test, status, message, details });
+            displayResults();
+        }
+
+        function clearResults() {
+            testResults = [];
+            displayResults();
+        }
+
+        function displayResults() {
+            const resultsDiv = document.getElementById('results');
+            
+            if (testResults.length === 0) {
+                resultsDiv.innerHTML = '<div class="test-section"><p>No tests run yet. Click "Run All Tests" to begin.</p></div>';
+                return;
+            }
+
+            // Group results by category
+            const categories = {};
+            testResults.forEach(result => {
+                if (!categories[result.category]) {
+                    categories[result.category] = [];
+                }
+                categories[result.category].push(result);
+            });
+
+            // Calculate summary
+            const total = testResults.length;
+            const passed = testResults.filter(r => r.status === 'pass').length;
+            const failed = testResults.filter(r => r.status === 'fail').length;
+            const warnings = testResults.filter(r => r.status === 'warning').length;
+
+            let html = `
+                <div class="test-section">
+                    <div class="summary ${failed > 0 ? 'fail' : passed === total ? 'pass' : 'warning'}">
+                        Test Summary: ${passed}/${total} passed, ${failed} failed, ${warnings} warnings
+                    </div>
+                </div>
+            `;
+
+            // Display results by category
+            for (const [category, results] of Object.entries(categories)) {
+                html += `<div class="test-section"><h2>${category}</h2>`;
+                
+                results.forEach(result => {
+                    html += `
+                        <div class="test-result ${result.status}">
+                            <strong>${result.test}:</strong> ${result.message}
+                            ${result.details ? `<div class="code">${result.details}</div>` : ''}
+                        </div>
+                    `;
+                });
+                
+                html += '</div>';
+            }
+
+            resultsDiv.innerHTML = html;
+        }
+
+        function testBrowserDetection() {
+            clearResults();
+            
+            const browser = BrowserCompatibility.detectBrowser();
+            
+            addResult(
+                'Browser Detection',
+                'Browser Type',
+                'info',
+                `Detected: ${browser.name} version ${browser.version}`,
+                `User Agent: ${navigator.userAgent}`
+            );
+
+            addResult(
+                'Browser Detection',
+                'Minimum Version Check',
+                browser.isSupported ? 'pass' : 'warning',
+                browser.isSupported 
+                    ? `Browser version ${browser.version} meets minimum requirement (${browser.minimumVersion})`
+                    : `Browser version ${browser.version} is below minimum requirement (${browser.minimumVersion})`
+            );
+
+            // Test specific browser requirements
+            const requirements = {
+                'Chrome': 90,
+                'Firefox': 88,
+                'Edge': 90,
+                'Safari': 14
+            };
+
+            addResult(
+                'Browser Detection',
+                'Supported Browsers',
+                'info',
+                'Minimum versions required',
+                Object.entries(requirements).map(([name, ver]) => `${name}: ${ver}+`).join('\n')
+            );
+        }
+
+        function testLocalStorage() {
+            const result = BrowserCompatibility.checkLocalStorage();
+            
+            addResult(
+                'Local Storage',
+                'API Availability',
+                result.available ? 'pass' : 'fail',
+                result.available ? 'Local Storage is available' : result.error
+            );
+
+            if (result.available) {
+                // Test read/write operations
+                try {
+                    const testKey = '__test_key__';
+                    const testValue = { test: 'data', number: 123, array: [1, 2, 3] };
+                    
+                    localStorage.setItem(testKey, JSON.stringify(testValue));
+                    const retrieved = JSON.parse(localStorage.getItem(testKey));
+                    localStorage.removeItem(testKey);
+                    
+                    const matches = JSON.stringify(testValue) === JSON.stringify(retrieved);
+                    
+                    addResult(
+                        'Local Storage',
+                        'Read/Write Test',
+                        matches ? 'pass' : 'fail',
+                        matches ? 'Successfully wrote and read data' : 'Data mismatch after read'
+                    );
+                } catch (error) {
+                    addResult(
+                        'Local Storage',
+                        'Read/Write Test',
+                        'fail',
+                        `Error during read/write: ${error.message}`
+                    );
+                }
+
+                // Test storage capacity
+                try {
+                    const testKey = '__capacity_test__';
+                    let size = 0;
+                    const chunk = 'x'.repeat(1024); // 1KB chunks
+                    
+                    for (let i = 0; i < 100; i++) {
+                        localStorage.setItem(testKey, chunk.repeat(i));
+                        size = i;
+                    }
+                    
+                    localStorage.removeItem(testKey);
+                    
+                    addResult(
+                        'Local Storage',
+                        'Capacity Test',
+                        'pass',
+                        `Successfully stored at least ${size}KB of data`
+                    );
+                } catch (error) {
+                    addResult(
+                        'Local Storage',
+                        'Capacity Test',
+                        'warning',
+                        `Storage limit reached or error: ${error.message}`
+                    );
+                }
+            }
+        }
+
+        function testAPIs() {
+            const result = BrowserCompatibility.checkRequiredAPIs();
+            
+            addResult(
+                'Required APIs',
+                'Overall API Check',
+                result.available ? 'pass' : 'fail',
+                result.available 
+                    ? 'All required APIs are available' 
+                    : `Missing APIs: ${result.missing.join(', ')}`
+            );
+
+            // Test individual APIs
+            const apiTests = [
+                { name: 'JSON', test: () => typeof JSON !== 'undefined' && JSON.parse && JSON.stringify },
+                { name: 'Date', test: () => typeof Date !== 'undefined' },
+                { name: 'Array.forEach', test: () => typeof Array.prototype.forEach === 'function' },
+                { name: 'Array.map', test: () => typeof Array.prototype.map === 'function' },
+                { name: 'Array.filter', test: () => typeof Array.prototype.filter === 'function' },
+                { name: 'Array.find', test: () => typeof Array.prototype.find === 'function' },
+                { name: 'Object.assign', test: () => typeof Object.assign === 'function' },
+                { name: 'Promise', test: () => typeof Promise !== 'undefined' },
+                { name: 'setInterval', test: () => typeof setInterval === 'function' },
+                { name: 'setTimeout', test: () => typeof setTimeout === 'function' },
+                { name: 'addEventListener', test: () => typeof document.addEventListener === 'function' },
+                { name: 'querySelector', test: () => typeof document.querySelector === 'function' },
+                { name: 'classList', test: () => {
+                    const el = document.createElement('div');
+                    return typeof el.classList !== 'undefined';
+                }}
+            ];
+
+            apiTests.forEach(api => {
+                try {
+                    const available = api.test();
+                    addResult(
+                        'Required APIs',
+                        api.name,
+                        available ? 'pass' : 'fail',
+                        available ? 'Available' : 'Not available'
+                    );
+                } catch (error) {
+                    addResult(
+                        'Required APIs',
+                        api.name,
+                        'fail',
+                        `Error checking: ${error.message}`
+                    );
+                }
+            });
+        }
+
+        function testFullCompatibility() {
+            const report = BrowserCompatibility.runCompatibilityChecks();
+            
+            addResult(
+                'Full Compatibility Check',
+                'Overall Status',
+                report.isFullyCompatible ? 'pass' : 'warning',
+                report.isFullyCompatible 
+                    ? 'All compatibility checks passed' 
+                    : 'Some compatibility issues detected'
+            );
+
+            addResult(
+                'Full Compatibility Check',
+                'Compatibility Summary',
+                'info',
+                BrowserCompatibility.getCompatibilitySummary()
+            );
+
+            // Display detailed report
+            const details = `
+Browser: ${report.browser.name} ${report.browser.version}
+Supported: ${report.browser.isSupported}
+Local Storage: ${report.localStorage.available}
+APIs Available: ${report.apis.available}
+${!report.apis.available ? 'Missing: ' + report.apis.missing.join(', ') : ''}
+            `.trim();
+
+            addResult(
+                'Full Compatibility Check',
+                'Detailed Report',
+                'info',
+                'Complete compatibility information',
+                details
+            );
+        }
+
+        function testBrowserSpecificFeatures() {
+            // Test browser-specific features that might differ
+            const features = [
+                {
+                    name: 'requestAnimationFrame',
+                    test: () => typeof requestAnimationFrame === 'function'
+                },
+                {
+                    name: 'Intl.DateTimeFormat',
+                    test: () => typeof Intl !== 'undefined' && typeof Intl.DateTimeFormat === 'function'
+                },
+                {
+                    name: 'fetch API',
+                    test: () => typeof fetch === 'function'
+                },
+                {
+                    name: 'ES6 Classes',
+                    test: () => {
+                        try {
+                            eval('class Test {}');
+                            return true;
+                        } catch (e) {
+                            return false;
+                        }
+                    }
+                },
+                {
+                    name: 'Arrow Functions',
+                    test: () => {
+                        try {
+                            eval('() => {}');
+                            return true;
+                        } catch (e) {
+                            return false;
+                        }
+                    }
+                },
+                {
+                    name: 'Template Literals',
+                    test: () => {
+                        try {
+                            eval('`test`');
+                            return true;
+                        } catch (e) {
+                            return false;
+                        }
+                    }
+                }
+            ];
+
+            features.forEach(feature => {
+                try {
+                    const available = feature.test();
+                    addResult(
+                        'Browser Features',
+                        feature.name,
+                        available ? 'pass' : 'warning',
+                        available ? 'Supported' : 'Not supported (may use polyfill)'
+                    );
+                } catch (error) {
+                    addResult(
+                        'Browser Features',
+                        feature.name,
+                        'warning',
+                        `Error checking: ${error.message}`
+                    );
+                }
+            });
+        }
+
+        function runAllTests() {
+            clearResults();
+            testBrowserDetection();
+            testLocalStorage();
+            testAPIs();
+            testBrowserSpecificFeatures();
+            testFullCompatibility();
+        }
+
+        // Run tests on page load
+        window.addEventListener('DOMContentLoaded', () => {
+            displayResults();
+        });
+    </script>
+</body>
+</html>

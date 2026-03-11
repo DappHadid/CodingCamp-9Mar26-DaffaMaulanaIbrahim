@@ -30,6 +30,12 @@ class StorageManager {
       } catch (parseError) {
         // Handle corrupted data
         console.error(`Data corruption detected for key "${key}":`, parseError);
+        if (typeof NotificationManager !== 'undefined') {
+          NotificationManager.warning(
+            'Some saved data was corrupted and has been reset. Starting fresh.',
+            6000
+          );
+        }
         // Clear corrupted data
         this.remove(key);
         return defaultValue;
@@ -52,6 +58,12 @@ class StorageManager {
       // Check if Local Storage is available
       if (!this.isAvailable()) {
         console.warn('Local Storage is not available');
+        if (typeof NotificationManager !== 'undefined') {
+          NotificationManager.warning(
+            'Unable to save data. Your browser may be in private browsing mode or Local Storage is disabled.',
+            7000
+          );
+        }
         return false;
       }
 
@@ -65,18 +77,51 @@ class StorageManager {
       // Handle QuotaExceededError
       if (error.name === 'QuotaExceededError') {
         console.error('Local Storage quota exceeded. Consider deleting old data.');
-        // Could emit an event or call a callback here for UI notification
+        if (typeof NotificationManager !== 'undefined') {
+          NotificationManager.error(
+            'Storage limit reached! Please delete some tasks or quick links to free up space.',
+            10000
+          );
+        }
       } 
       // Handle SecurityError
       else if (error.name === 'SecurityError') {
         console.error('Local Storage access denied (possibly private browsing mode).');
+        if (typeof NotificationManager !== 'undefined') {
+          NotificationManager.error(
+            'Cannot access storage. Your browser settings may be blocking data storage.',
+            7000
+          );
+        }
       } 
       // Handle other errors
       else {
         console.error(`Error writing to Local Storage (key: "${key}"):`, error);
+        if (typeof NotificationManager !== 'undefined') {
+          NotificationManager.error(
+            'Failed to save data. Please try again.',
+            5000
+          );
+        }
       }
       return false;
     }
+  }
+
+  /**
+   * Save data to Local Storage asynchronously (non-blocking)
+   * Uses setTimeout to defer the operation to the next event loop tick
+   * @param {string} key - Storage key
+   * @param {*} value - Value to store (will be JSON serialized)
+   * @returns {Promise<boolean>} Promise that resolves to true if successful, false otherwise
+   */
+  static setAsync(key, value) {
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        const result = this.set(key, value);
+        resolve(result);
+      }, 0);
+    });
   }
 
   /**

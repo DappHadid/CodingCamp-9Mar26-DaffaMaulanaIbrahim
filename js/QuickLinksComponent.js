@@ -10,6 +10,12 @@ class QuickLinksComponent {
   constructor(containerElement) {
     this.container = containerElement;
     this.links = [];
+    
+    // Create debounced save function (300ms delay)
+    // This prevents excessive storage writes during rapid operations
+    this.debouncedSave = PerformanceUtils.debounce(() => {
+      StorageManager.setAsync('quickLinks', this.links);
+    }, 300);
   }
 
   /**
@@ -201,14 +207,14 @@ class QuickLinksComponent {
   }
 
   /**
-   * Save links to Local Storage
+   * Save links to Local Storage (debounced for performance)
    */
   saveLinks() {
-    StorageManager.set('quickLinks', this.links);
+    this.debouncedSave();
   }
 
   /**
-   * Render links to DOM
+   * Render links to DOM (optimized with DocumentFragment)
    */
   render() {
     if (!this.container) {
@@ -240,34 +246,48 @@ class QuickLinksComponent {
     const linksList = document.createElement('ul');
     linksList.className = 'links-list-items';
 
+    // Use DocumentFragment for batch DOM updates (better performance)
+    const fragment = document.createDocumentFragment();
+
     this.links.forEach(link => {
-      const linkItem = document.createElement('li');
-      linkItem.className = 'link-item';
-
-      // Link button (clickable)
-      const linkButton = document.createElement('button');
-      linkButton.className = 'link-button';
-      linkButton.textContent = link.name;
-      linkButton.addEventListener('click', () => {
-        this.openLink(link.url);
-      });
-
-      // Delete button
-      const deleteButton = document.createElement('button');
-      deleteButton.className = 'delete-button';
-      deleteButton.textContent = 'Delete';
-      deleteButton.addEventListener('click', () => {
-        this.deleteLink(link.id);
-      });
-
-      // Assemble link item
-      linkItem.appendChild(linkButton);
-      linkItem.appendChild(deleteButton);
-
-      linksList.appendChild(linkItem);
+      const linkItem = this.createLinkElement(link);
+      fragment.appendChild(linkItem);
     });
 
+    linksList.appendChild(fragment);
     linksListContainer.appendChild(linksList);
+  }
+
+  /**
+   * Create a link element (extracted for better performance and reusability)
+   * @param {Object} link - Link object
+   * @returns {HTMLElement} Link item element
+   */
+  createLinkElement(link) {
+    const linkItem = document.createElement('li');
+    linkItem.className = 'link-item';
+
+    // Link button (clickable)
+    const linkButton = document.createElement('button');
+    linkButton.className = 'link-button';
+    linkButton.textContent = link.name;
+    linkButton.addEventListener('click', () => {
+      this.openLink(link.url);
+    });
+
+    // Delete button
+    const deleteButton = document.createElement('button');
+    deleteButton.className = 'delete-button';
+    deleteButton.textContent = 'Delete';
+    deleteButton.addEventListener('click', () => {
+      this.deleteLink(link.id);
+    });
+
+    // Assemble link item
+    linkItem.appendChild(linkButton);
+    linkItem.appendChild(deleteButton);
+
+    return linkItem;
   }
 
   /**

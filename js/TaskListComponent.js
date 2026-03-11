@@ -10,6 +10,12 @@ class TaskListComponent {
   constructor(containerElement) {
     this.container = containerElement;
     this.tasks = [];
+    
+    // Create debounced save function (300ms delay)
+    // This prevents excessive storage writes during rapid operations
+    this.debouncedSave = PerformanceUtils.debounce(() => {
+      StorageManager.setAsync('tasks', this.tasks);
+    }, 300);
   }
 
   /**
@@ -204,14 +210,14 @@ class TaskListComponent {
   }
 
   /**
-   * Save tasks to Local Storage
+   * Save tasks to Local Storage (debounced for performance)
    */
   saveTasks() {
-    StorageManager.set('tasks', this.tasks);
+    this.debouncedSave();
   }
 
   /**
-   * Render task list to DOM
+   * Render task list to DOM (optimized with DocumentFragment)
    */
   render() {
     if (!this.container) {
@@ -243,52 +249,66 @@ class TaskListComponent {
     const taskList = document.createElement('ul');
     taskList.className = 'task-list-items';
 
+    // Use DocumentFragment for batch DOM updates (better performance)
+    const fragment = document.createDocumentFragment();
+
     this.tasks.forEach(task => {
-      const taskItem = document.createElement('li');
-      taskItem.className = 'task-item';
-      if (task.completed) {
-        taskItem.classList.add('completed');
-      }
-
-      // Checkbox for completion
-      const checkbox = document.createElement('input');
-      checkbox.type = 'checkbox';
-      checkbox.checked = task.completed;
-      checkbox.addEventListener('change', () => {
-        this.toggleTask(task.id);
-      });
-
-      // Task description
-      const description = document.createElement('span');
-      description.className = 'task-description';
-      description.textContent = task.description;
-
-      // Edit button
-      const editButton = document.createElement('button');
-      editButton.className = 'edit-button';
-      editButton.textContent = 'Edit';
-      editButton.addEventListener('click', () => {
-        this.enterEditMode(task.id, taskItem);
-      });
-
-      // Delete button
-      const deleteButton = document.createElement('button');
-      deleteButton.className = 'delete-button';
-      deleteButton.textContent = 'Delete';
-      deleteButton.addEventListener('click', () => {
-        this.deleteTask(task.id);
-      });
-
-      // Assemble task item
-      taskItem.appendChild(checkbox);
-      taskItem.appendChild(description);
-      taskItem.appendChild(editButton);
-      taskItem.appendChild(deleteButton);
-
-      taskList.appendChild(taskItem);
+      const taskItem = this.createTaskElement(task);
+      fragment.appendChild(taskItem);
     });
 
+    taskList.appendChild(fragment);
     taskListContainer.appendChild(taskList);
+  }
+
+  /**
+   * Create a task element (extracted for better performance and reusability)
+   * @param {Object} task - Task object
+   * @returns {HTMLElement} Task item element
+   */
+  createTaskElement(task) {
+    const taskItem = document.createElement('li');
+    taskItem.className = 'task-item';
+    if (task.completed) {
+      taskItem.classList.add('completed');
+    }
+
+    // Checkbox for completion
+    const checkbox = document.createElement('input');
+    checkbox.type = 'checkbox';
+    checkbox.checked = task.completed;
+    checkbox.addEventListener('change', () => {
+      this.toggleTask(task.id);
+    });
+
+    // Task description
+    const description = document.createElement('span');
+    description.className = 'task-description';
+    description.textContent = task.description;
+
+    // Edit button
+    const editButton = document.createElement('button');
+    editButton.className = 'edit-button';
+    editButton.textContent = 'Edit';
+    editButton.addEventListener('click', () => {
+      this.enterEditMode(task.id, taskItem);
+    });
+
+    // Delete button
+    const deleteButton = document.createElement('button');
+    deleteButton.className = 'delete-button';
+    deleteButton.textContent = 'Delete';
+    deleteButton.addEventListener('click', () => {
+      this.deleteTask(task.id);
+    });
+
+    // Assemble task item
+    taskItem.appendChild(checkbox);
+    taskItem.appendChild(description);
+    taskItem.appendChild(editButton);
+    taskItem.appendChild(deleteButton);
+
+    return taskItem;
   }
 
   /**
@@ -351,7 +371,7 @@ class TaskListComponent {
    * @returns {string} Unique ID
    */
   generateId() {
-    return `task-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    return `task-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`;
   }
 }
 

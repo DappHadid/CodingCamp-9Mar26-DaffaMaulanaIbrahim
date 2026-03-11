@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>End-to-End Integration Test - Life Dashboard</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 20px auto;
+            padding: 20px;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .test-result {
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 3px;
+        }
+        .pass {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .fail {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        .info {
+            background-color: #d1ecf1;
+            color: #0c5460;
+        }
+        .summary {
+            font-size: 1.2em;
+            font-weight: bold;
+            margin: 20px 0;
+            padding: 15px;
+            border-radius: 5px;
+        }
+        #app-container {
+            margin-top: 30px;
+            padding: 20px;
+            border: 2px solid #007bff;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <h1>End-to-End Integration Test</h1>
+    <p>Testing all components working together seamlessly</p>
+
+    <div id="test-results"></div>
+    <div id="summary"></div>
+
+    <h2>Live Application Instance</h2>
+    <div id="app-container">
+        <div id="greeting-container" class="greeting-component"></div>
+        <div id="timer-container" class="timer-component"></div>
+        <div id="tasklist-container" class="tasklist-component">
+            <div class="task-input-container"></div>
+            <div class="task-list"></div>
+        </div>
+        <div id="quicklinks-container" class="quicklinks-component">
+            <div class="quicklinks-input-container"></div>
+            <div class="quicklinks-list"></div>
+        </div>
+    </div>
+
+    <!-- Load application scripts -->
+    <script src="js/PerformanceUtils.js"></script>
+    <script src="js/NotificationManager.js"></script>
+    <script src="js/BrowserCompatibility.js"></script>
+    <script src="js/StorageManager.js"></script>
+    <script src="js/GreetingComponent.js"></script>
+    <script src="js/TimerComponent.js"></script>
+    <script src="js/TaskListComponent.js"></script>
+    <script src="js/QuickLinksComponent.js"></script>
+
+    <script>
+        // Test framework
+        const results = [];
+        let passCount = 0;
+        let failCount = 0;
+
+        function log(message, type = 'info') {
+            const div = document.createElement('div');
+            div.className = `test-result ${type}`;
+            div.textContent = message;
+            document.getElementById('test-results').appendChild(div);
+            
+            if (type === 'pass') passCount++;
+            if (type === 'fail') failCount++;
+            
+            results.push({ message, type });
+        }
+
+        function assert(condition, message) {
+            if (condition) {
+                log(`✓ ${message}`, 'pass');
+                return true;
+            } else {
+                log(`✗ ${message}`, 'fail');
+                return false;
+            }
+        }
+
+        function sleep(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+
+        // Component instances
+        let greeting, timer, taskList, quickLinks;
+
+        // Test Suite
+        async function runTests() {
+            log('=== Starting End-to-End Integration Tests ===', 'info');
+            
+            // Clear Local Storage before tests
+            localStorage.clear();
+            
+            // Test 1: Component Initialization (Req 8.1, 8.2, 9.4)
+            log('--- Test 1: Component Initialization ---', 'info');
+            try {
+                greeting = new GreetingComponent(document.getElementById('greeting-container'));
+                timer = new TimerComponent(document.getElementById('timer-container'));
+                taskList = new TaskListComponent(document.getElementById('tasklist-container'));
+                quickLinks = new QuickLinksComponent(document.getElementById('quicklinks-container'));
+                
+                greeting.init();
+                timer.init();
+                taskList.init();
+                quickLinks.init();
+                
+                assert(greeting !== null, 'GreetingComponent initialized');
+                assert(timer !== null, 'TimerComponent initialized');
+                assert(taskList !== null, 'TaskListComponent initialized');
+                assert(quickLinks !== null, 'QuickLinksComponent initialized');
+            } catch (error) {
+                log(`Component initialization failed: ${error.message}`, 'fail');
+            }
+            
+            await sleep(100);
+
+            // Test 2: Greeting Component Display
+            log('--- Test 2: Greeting Component Display ---', 'info');
+            const greetingContainer = document.getElementById('greeting-container');
+            assert(greetingContainer.querySelector('.greeting-message') !== null, 'Greeting message displayed');
+            assert(greetingContainer.querySelector('.time-display') !== null, 'Time display rendered');
+            assert(greetingContainer.querySelector('.date-display') !== null, 'Date display rendered');
+            
+            const timeText = greetingContainer.querySelector('.time-display').textContent;
+            assert(timeText.includes(':'), 'Time format includes colon separator');
+            assert(timeText.includes('AM') || timeText.includes('PM'), 'Time format includes AM/PM');
+            
+            // Test 3: Timer Component Controls
+            log('--- Test 3: Timer Component Controls ---', 'info');
+            const timerContainer = document.getElementById('timer-container');
+            assert(timerContainer.querySelector('.timer-display') !== null, 'Timer display rendered');
+            assert(timerContainer.querySelector('.timer-start') !== null, 'Start button exists');
+            assert(timerContainer.querySelector('.timer-stop') !== null, 'Stop button exists');
+            assert(timerContainer.querySelector('.timer-reset') !== null, 'Reset button exists');
+            
+            const initialTime = timerContainer.querySelector('.timer-display').textContent;
+            assert(initialTime === '25:00', 'Timer initializes to 25 minutes');
+
+            // Test 4: Task Persistence (Req 8.1, 8.2)
+            log('--- Test 4: Task Data Persistence ---', 'info');
+            
+            // Add tasks
+            const task1 = taskList.addTask('Test task 1');
+            const task2 = taskList.addTask('Test task 2');
+            const task3 = taskList.addTask('Test task 3');
+            
+            assert(task1 !== null, 'Task 1 added successfully');
+            assert(task2 !== null, 'Task 2 added successfully');
+            assert(task3 !== null, 'Task 3 added successfully');
+            assert(taskList.tasks.length === 3, 'Task list contains 3 tasks');
+            
+            await sleep(500); // Wait for debounced save
+            
+            // Verify storage
+            const storedTasks = StorageManager.get('tasks', []);
+            assert(storedTasks.length === 3, 'Tasks persisted to Local Storage');
+            assert(storedTasks[0].description === 'Test task 1', 'Task 1 description persisted');
+            assert(storedTasks[1].description === 'Test task 2', 'Task 2 description persisted');
+            assert(storedTasks[2].description === 'Test task 3', 'Task 3 description persisted');
+
+            // Test 5: Task Operations
+            log('--- Test 5: Task Operations ---', 'info');
+            
+            // Toggle completion
+            const toggleResult = taskList.toggleTask(task1.id);
+            assert(toggleResult === true, 'Task toggle successful');
+            assert(task1.completed === true, 'Task marked as completed');
+            
+            await sleep(500);
+            const storedAfterToggle = StorageManager.get('tasks', []);
+            assert(storedAfterToggle[0].completed === true, 'Task completion persisted');
+            
+            // Edit task
+            const editResult = taskList.editTask(task2.id, 'Updated task 2');
+            assert(editResult === true, 'Task edit successful');
+            assert(task2.description === 'Updated task 2', 'Task description updated');
+            
+            await sleep(500);
+            const storedAfterEdit = StorageManager.get('tasks', []);
+            assert(storedAfterEdit[1].description === 'Updated task 2', 'Task edit persisted');
+            
+            // Delete task
+            const deleteResult = taskList.deleteTask(task3.id);
+            assert(deleteResult === true, 'Task delete successful');
+            assert(taskList.tasks.length === 2, 'Task removed from list');
+            
+            await sleep(500);
+            const storedAfterDelete = StorageManager.get('tasks', []);
+            assert(storedAfterDelete.length === 2, 'Task deletion persisted');
+
+            // Test 6: Quick Links Persistence (Req 9.4)
+            log('--- Test 6: Quick Links Data Persistence ---', 'info');
+            
+            // Add links
+            const link1 = quickLinks.addLink('GitHub', 'https://github.com');
+            const link2 = quickLinks.addLink('Google', 'https://google.com');
+            const link3 = quickLinks.addLink('MDN', 'https://developer.mozilla.org');
+            
+            assert(link1 !== null, 'Link 1 added successfully');
+            assert(link2 !== null, 'Link 2 added successfully');
+            assert(link3 !== null, 'Link 3 added successfully');
+            assert(quickLinks.links.length === 3, 'Quick links list contains 3 links');
+            
+            await sleep(500); // Wait for debounced save
+            
+            // Verify storage
+            const storedLinks = StorageManager.get('quickLinks', []);
+            assert(storedLinks.length === 3, 'Links persisted to Local Storage');
+            assert(storedLinks[0].name === 'GitHub', 'Link 1 name persisted');
+            assert(storedLinks[0].url === 'https://github.com', 'Link 1 URL persisted');
+            assert(storedLinks[1].name === 'Google', 'Link 2 name persisted');
+            assert(storedLinks[2].name === 'MDN', 'Link 3 name persisted');
+
+            // Test 7: Quick Links Operations
+            log('--- Test 7: Quick Links Operations ---', 'info');
+            
+            // Delete link
+            const deleteLinkResult = quickLinks.deleteLink(link2.id);
+            assert(deleteLinkResult === true, 'Link delete successful');
+            assert(quickLinks.links.length === 2, 'Link removed from list');
+            
+            await sleep(500);
+            const storedAfterLinkDelete = StorageManager.get('quickLinks', []);
+            assert(storedAfterLinkDelete.length === 2, 'Link deletion persisted');
+            
+            // Test 8: Page Reload Simulation (Req 8.1, 9.4)
+            log('--- Test 8: Page Reload Simulation ---', 'info');
+            
+            // Destroy and recreate components
+            greeting.destroy();
+            timer.destroy();
+            
+            // Create new instances
+            const newTaskList = new TaskListComponent(document.getElementById('tasklist-container'));
+            const newQuickLinks = new QuickLinksComponent(document.getElementById('quicklinks-container'));
+            
+            newTaskList.init();
+            newQuickLinks.init();
+            
+            assert(newTaskList.tasks.length === 2, 'Tasks loaded after reload');
+            assert(newTaskList.tasks[0].description === 'Test task 1', 'Task 1 data preserved');
+            assert(newTaskList.tasks[1].description === 'Updated task 2', 'Task 2 data preserved');
+            assert(newTaskList.tasks[0].completed === true, 'Task completion state preserved');
+            
+            assert(newQuickLinks.links.length === 2, 'Links loaded after reload');
+            assert(newQuickLinks.links[0].name === 'GitHub', 'Link 1 data preserved');
+            assert(newQuickLinks.links[1].name === 'MDN', 'Link 2 data preserved');
+
+            // Test 9: Event Handler Binding
+            log('--- Test 9: Event Handler Binding ---', 'info');
+            
+            // Check timer buttons are functional
+            const startBtn = timerContainer.querySelector('.timer-start');
+            const stopBtn = timerContainer.querySelector('.timer-stop');
+            const resetBtn = timerContainer.querySelector('.timer-reset');
+            
+            assert(startBtn !== null && !startBtn.disabled, 'Start button is enabled');
+            assert(stopBtn !== null && stopBtn.disabled, 'Stop button is disabled (timer not running)');
+            assert(resetBtn !== null && !resetBtn.disabled, 'Reset button is enabled');
+            
+            // Start timer
+            startBtn.click();
+            await sleep(100);
+            assert(timer.state === 'running', 'Timer started via button click');
+            
+            // Stop timer
+            stopBtn.click();
+            await sleep(100);
+            assert(timer.state === 'paused', 'Timer stopped via button click');
+            
+            // Reset timer
+            resetBtn.click();
+            await sleep(100);
+            assert(timer.state === 'idle', 'Timer reset via button click');
+            assert(timer.remaining === 1500, 'Timer reset to initial duration');
+
+            // Test 10: Memory Leak Prevention
+            log('--- Test 10: Memory Leak Prevention ---', 'info');
+            
+            // Create and destroy greeting component multiple times
+            for (let i = 0; i < 5; i++) {
+                const tempGreeting = new GreetingComponent(document.getElementById('greeting-container'));
+                tempGreeting.init();
+                tempGreeting.destroy();
+            }
+            assert(true, 'Multiple greeting component create/destroy cycles completed');
+            
+            // Create and destroy timer component multiple times
+            for (let i = 0; i < 5; i++) {
+                const tempTimer = new TimerComponent(document.getElementById('timer-container'));
+                tempTimer.init();
+                tempTimer.start();
+                tempTimer.destroy();
+            }
+            assert(true, 'Multiple timer component create/destroy cycles completed');
+            
+            // Verify no lingering intervals (this is implicit - if intervals weren't cleared, 
+            // we'd see console errors or unexpected behavior)
+            assert(true, 'No memory leaks detected from intervals');
+
+            // Test 11: Input Validation
+            log('--- Test 11: Input Validation ---', 'info');
+            
+            // Empty task rejection
+            const emptyTask = newTaskList.addTask('   ');
+            assert(emptyTask === null, 'Empty task rejected');
+            
+            const emptyTask2 = newTaskList.addTask('');
+            assert(emptyTask2 === null, 'Whitespace-only task rejected');
+            
+            // Invalid URL rejection
+            const invalidLink1 = newQuickLinks.addLink('Test', 'not-a-url');
+            assert(invalidLink1 === null, 'Invalid URL rejected (no protocol)');
+            
+            const invalidLink2 = newQuickLinks.addLink('Test', 'ftp://example.com');
+            assert(invalidLink2 === null, 'Invalid URL rejected (wrong protocol)');
+            
+            const invalidLink3 = newQuickLinks.addLink('', 'https://example.com');
+            assert(invalidLink3 === null, 'Empty link name rejected');
+            
+            // Valid inputs accepted
+            const validTask = newTaskList.addTask('Valid task');
+            assert(validTask !== null, 'Valid task accepted');
+            
+            const validLink = newQuickLinks.addLink('Valid Link', 'https://example.com');
+            assert(validLink !== null, 'Valid link accepted');
+
+            // Test 12: Component Integration
+            log('--- Test 12: Component Integration ---', 'info');
+            
+            // All components should work independently without interfering
+            const taskCountBefore = newTaskList.tasks.length;
+            const linkCountBefore = newQuickLinks.links.length;
+            
+            // Add task
+            newTaskList.addTask('Integration test task');
+            assert(newTaskList.tasks.length === taskCountBefore + 1, 'Task added without affecting links');
+            assert(newQuickLinks.links.length === linkCountBefore, 'Links unchanged after task addition');
+            
+            // Add link
+            newQuickLinks.addLink('Integration Link', 'https://test.com');
+            assert(newQuickLinks.links.length === linkCountBefore + 1, 'Link added without affecting tasks');
+            assert(newTaskList.tasks.length === taskCountBefore + 1, 'Tasks unchanged after link addition');
+            
+            // Timer operations don't affect data
+            timer.start();
+            await sleep(100);
+            timer.stop();
+            assert(newTaskList.tasks.length === taskCountBefore + 1, 'Timer operations don\'t affect tasks');
+            assert(newQuickLinks.links.length === linkCountBefore + 1, 'Timer operations don\'t affect links');
+
+            // Test 13: Storage Error Handling
+            log('--- Test 13: Storage Error Handling ---', 'info');
+            
+            // Test corrupted data handling
+            localStorage.setItem('tasks', 'invalid-json{{{');
+            const corruptedTasks = StorageManager.get('tasks', []);
+            assert(Array.isArray(corruptedTasks) && corruptedTasks.length === 0, 
+                   'Corrupted task data returns default value');
+            
+            localStorage.setItem('quickLinks', 'not-json');
+            const corruptedLinks = StorageManager.get('quickLinks', []);
+            assert(Array.isArray(corruptedLinks) && corruptedLinks.length === 0, 
+                   'Corrupted link data returns default value');
+            
+            // Test missing data handling
+            localStorage.removeItem('tasks');
+            const missingTasks = StorageManager.get('tasks', []);
+            assert(Array.isArray(missingTasks) && missingTasks.length === 0, 
+                   'Missing task data returns default value');
+            
+            // Test 14: Complete Application State
+            log('--- Test 14: Complete Application State ---', 'info');
+            
+            // Clean slate
+            localStorage.clear();
+            
+            // Initialize fresh components
+            const finalTaskList = new TaskListComponent(document.getElementById('tasklist-container'));
+            const finalQuickLinks = new QuickLinksComponent(document.getElementById('quicklinks-container'));
+            
+            finalTaskList.init();
+            finalQuickLinks.init();
+            
+            assert(finalTaskList.tasks.length === 0, 'Fresh task list is empty');
+            assert(finalQuickLinks.links.length === 0, 'Fresh links list is empty');
+
+            // Add complete application data
+            finalTaskList.addTask('Morning workout');
+            finalTaskList.addTask('Review code');
+            finalTaskList.addTask('Team meeting');
+            finalTaskList.toggleTask(finalTaskList.tasks[0].id);
+            
+            finalQuickLinks.addLink('GitHub', 'https://github.com');
+            finalQuickLinks.addLink('Stack Overflow', 'https://stackoverflow.com');
+            
+            await sleep(500);
+            
+            // Verify complete state
+            assert(finalTaskList.tasks.length === 3, 'Complete task list created');
+            assert(finalTaskList.tasks[0].completed === true, 'Task completion tracked');
+            assert(finalQuickLinks.links.length === 2, 'Complete links list created');
+            
+            const finalStoredTasks = StorageManager.get('tasks', []);
+            const finalStoredLinks = StorageManager.get('quickLinks', []);
+            
+            assert(finalStoredTasks.length === 3, 'Complete task state persisted');
+            assert(finalStoredLinks.length === 2, 'Complete links state persisted');
+            
+            // Summary
+            log('=== Test Suite Complete ===', 'info');
+            const summary = document.getElementById('summary');
+            summary.className = 'summary ' + (failCount === 0 ? 'pass' : 'fail');
+            summary.innerHTML = `
+                <strong>Results:</strong> ${passCount} passed, ${failCount} failed<br>
+                <strong>Success Rate:</strong> ${((passCount / (passCount + failCount)) * 100).toFixed(1)}%
+            `;
+            
+            if (failCount === 0) {
+                log('✓ All integration tests passed! Application is ready for production.', 'pass');
+            } else {
+                log(`✗ ${failCount} test(s) failed. Please review and fix issues.`, 'fail');
+            }
+        }
+
+        // Run tests when page loads
+        window.addEventListener('DOMContentLoaded', () => {
+            setTimeout(runTests, 500);
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Error Messages Test</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <main class="dashboard">
+        <header class="dashboard-header">
+            <h1>Error Messages Test</h1>
+        </header>
+
+        <section class="dashboard-content">
+            <div style="background: white; padding: 2rem; border-radius: 12px; margin-bottom: 1rem;">
+                <h2>Test Notification System</h2>
+                <div style="display: flex; gap: 1rem; flex-wrap: wrap; margin-top: 1rem;">
+                    <button id="test-error" class="add-task-btn" style="background-color: #e74c3c;">Test Error</button>
+                    <button id="test-warning" class="add-task-btn" style="background-color: #f39c12;">Test Warning</button>
+                    <button id="test-success" class="add-task-btn" style="background-color: #27ae60;">Test Success</button>
+                    <button id="test-info" class="add-task-btn" style="background-color: #3498db;">Test Info</button>
+                    <button id="test-storage-quota" class="add-task-btn">Test Storage Quota Error</button>
+                    <button id="test-storage-security" class="add-task-btn">Test Storage Security Error</button>
+                    <button id="test-data-corruption" class="add-task-btn">Test Data Corruption</button>
+                </div>
+            </div>
+
+            <div style="background: white; padding: 2rem; border-radius: 12px; margin-bottom: 1rem;">
+                <h2>Test Inline Validation Errors</h2>
+                
+                <h3>Task Input Validation</h3>
+                <div id="tasklist-container" class="tasklist-component">
+                    <div class="task-input-container"></div>
+                    <div class="task-list"></div>
+                </div>
+
+                <h3 style="margin-top: 2rem;">Quick Link Input Validation</h3>
+                <div id="quicklinks-container" class="quicklinks-component">
+                    <div class="quicklinks-input-container"></div>
+                    <div class="quicklinks-list"></div>
+                </div>
+            </div>
+
+            <div style="background: white; padding: 2rem; border-radius: 12px;">
+                <h2>Test Timer Completion Feedback</h2>
+                <div id="timer-container" class="timer-component">
+                    <div class="timer-display"></div>
+                    <div class="timer-controls"></div>
+                </div>
+                <p style="margin-top: 1rem; color: #666;">
+                    Click "Start" to test timer. For quick testing, you can modify the timer duration in the console.
+                </p>
+            </div>
+        </section>
+    </main>
+
+    <script src="js/NotificationManager.js"></script>
+    <script src="js/StorageManager.js"></script>
+    <script src="js/TimerComponent.js"></script>
+    <script src="js/TaskListComponent.js"></script>
+    <script src="js/QuickLinksComponent.js"></script>
+
+    <script>
+        // Initialize components
+        const timer = new TimerComponent(document.getElementById('timer-container'));
+        timer.init();
+
+        const taskList = new TaskListComponent(document.getElementById('tasklist-container'));
+        taskList.init();
+
+        const quickLinks = new QuickLinksComponent(document.getElementById('quicklinks-container'));
+        quickLinks.init();
+
+        // Test notification buttons
+        document.getElementById('test-error').addEventListener('click', () => {
+            NotificationManager.error('This is an error message!');
+        });
+
+        document.getElementById('test-warning').addEventListener('click', () => {
+            NotificationManager.warning('This is a warning message!');
+        });
+
+        document.getElementById('test-success').addEventListener('click', () => {
+            NotificationManager.success('This is a success message!');
+        });
+
+        document.getElementById('test-info').addEventListener('click', () => {
+            NotificationManager.info('This is an info message!');
+        });
+
+        document.getElementById('test-storage-quota').addEventListener('click', () => {
+            NotificationManager.error(
+                'Storage limit reached! Please delete some tasks or quick links to free up space.',
+                10000
+            );
+        });
+
+        document.getElementById('test-storage-security').addEventListener('click', () => {
+            NotificationManager.error(
+                'Cannot access storage. Your browser settings may be blocking data storage.',
+                7000
+            );
+        });
+
+        document.getElementById('test-data-corruption').addEventListener('click', () => {
+            NotificationManager.warning(
+                'Some saved data was corrupted and has been reset. Starting fresh.',
+                6000
+            );
+        });
+
+        // Make timer accessible for quick testing
+        window.testTimer = timer;
+        console.log('Timer available as window.testTimer');
+        console.log('To test timer completion quickly, run: window.testTimer.remaining = 3; window.testTimer.start();');
+    </script>
+</body>
+</html>

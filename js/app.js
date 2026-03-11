@@ -15,6 +15,12 @@ let quickLinksComponent = null;
  */
 function initializeApp() {
   try {
+    // Run browser compatibility checks first
+    const compatibilityReport = BrowserCompatibility.initialize();
+    
+    // Continue with initialization even if not fully compatible
+    // (warnings will be displayed to the user)
+    
     // Get container elements
     const greetingContainer = document.getElementById('greeting-container');
     const timerContainer = document.getElementById('timer-container');

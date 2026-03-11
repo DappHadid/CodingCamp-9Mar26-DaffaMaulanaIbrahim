@@ -10,7 +10,9 @@ class TimerComponent {
     this.remaining = 1500;
     this.state = 'idle'; // 'idle' | 'running' | 'paused' | 'complete'
     this.intervalId = null;
+    this.animationFrameId = null;
     this.startTime = null;
+    this.lastRenderTime = 0;
   }
 
   /**
@@ -53,7 +55,37 @@ class TimerComponent {
       this.tick();
     }, 1000);
 
+    // Use requestAnimationFrame for smooth rendering
+    this.scheduleRender();
+
     this.render();
+  }
+
+  /**
+   * Schedule render using requestAnimationFrame for smooth updates
+   */
+  scheduleRender() {
+    if (this.state === 'running') {
+      this.animationFrameId = requestAnimationFrame(() => {
+        const now = Date.now();
+        // Throttle renders to ~60fps (16ms between frames)
+        if (now - this.lastRenderTime >= 16) {
+          this.render();
+          this.lastRenderTime = now;
+        }
+        this.scheduleRender();
+      });
+    }
+  }
+
+  /**
+   * Cancel scheduled render
+   */
+  cancelRender() {
+    if (this.animationFrameId) {
+      cancelAnimationFrame(this.animationFrameId);
+      this.animationFrameId = null;
+    }
   }
 
   /**
@@ -72,6 +104,9 @@ class TimerComponent {
       clearInterval(this.intervalId);
       this.intervalId = null;
     }
+
+    // Cancel animation frame
+    this.cancelRender();
 
     this.render();
   }
@@ -124,6 +159,9 @@ class TimerComponent {
       clearInterval(this.intervalId);
       this.intervalId = null;
     }
+
+    // Cancel animation frame
+    this.cancelRender();
 
     this.render();
   }
@@ -199,6 +237,7 @@ class TimerComponent {
       clearInterval(this.intervalId);
       this.intervalId = null;
     }
+    this.cancelRender();
   }
 }
 

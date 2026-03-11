@@ -7,6 +7,12 @@ class GreetingComponent {
   constructor(containerElement) {
     this.container = containerElement;
     this.intervalId = null;
+    this.lastUpdateTime = 0;
+    
+    // Throttle DOM updates to once per second max
+    this.throttledUpdate = PerformanceUtils.throttle(() => {
+      this.updateTime();
+    }, 1000);
   }
 
   /**
