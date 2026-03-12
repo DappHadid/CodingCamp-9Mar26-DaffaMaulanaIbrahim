@@ -62,14 +62,16 @@ class TaskListComponent {
         input.value = '';
         errorDiv.style.display = 'none';
       } else {
-        // Validation failed - show error
+        // Validation failed - show error (error message set in addTask)
         const trimmed = description.trim();
         if (trimmed === '') {
           errorDiv.textContent = 'Task cannot be empty';
+          errorDiv.style.display = 'block';
         } else if (trimmed.length > 500) {
           errorDiv.textContent = 'Task too long (max 500 characters)';
+          errorDiv.style.display = 'block';
         }
-        errorDiv.style.display = 'block';
+        // Duplicate error is already shown by addTask method
       }
     };
 
@@ -102,6 +104,21 @@ class TaskListComponent {
 
     // Validate: max 500 characters
     if (trimmed.length > 500) {
+      return null;
+    }
+
+    // Check for duplicate task (case-insensitive)
+    const isDuplicate = this.tasks.some(task => 
+      task.description.toLowerCase() === trimmed.toLowerCase()
+    );
+
+    if (isDuplicate) {
+      // Show error message for duplicate
+      const errorDiv = this.container.querySelector('#task-error');
+      if (errorDiv) {
+        errorDiv.textContent = 'This task already exists!';
+        errorDiv.style.display = 'block';
+      }
       return null;
     }
 

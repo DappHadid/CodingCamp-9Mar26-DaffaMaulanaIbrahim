@@ -92,8 +92,11 @@ class TimerComponent {
    * Stop/pause countdown
    */
   stop() {
+    console.log('TimerComponent: stop() called, current state:', this.state);
+    
     // Ignore if not running
     if (this.state !== 'running') {
+      console.log('TimerComponent: stop() ignored - timer not running');
       return;
     }
 
@@ -108,6 +111,7 @@ class TimerComponent {
     // Cancel animation frame
     this.cancelRender();
 
+    console.log('TimerComponent: Timer stopped/paused');
     this.render();
   }
 
@@ -115,6 +119,8 @@ class TimerComponent {
    * Reset to initial duration
    */
   reset() {
+    console.log('TimerComponent: reset() called, current state:', this.state);
+    
     // Stop timer if running
     if (this.state === 'running') {
       this.stop();
@@ -125,6 +131,7 @@ class TimerComponent {
     this.state = 'idle';
     this.startTime = null;
 
+    console.log('TimerComponent: Timer reset to', this.duration, 'seconds');
     this.render();
   }
 
@@ -217,16 +224,31 @@ class TimerComponent {
     const resetBtn = this.container.querySelector('.timer-reset');
 
     if (startBtn) {
-      startBtn.addEventListener('click', () => this.start());
+      startBtn.addEventListener('click', () => {
+        console.log('TimerComponent: Start button clicked');
+        this.start();
+      });
     }
 
     if (stopBtn) {
-      stopBtn.addEventListener('click', () => this.stop());
+      stopBtn.addEventListener('click', () => {
+        console.log('TimerComponent: Stop button clicked');
+        this.stop();
+      });
     }
 
     if (resetBtn) {
-      resetBtn.addEventListener('click', () => this.reset());
+      resetBtn.addEventListener('click', () => {
+        console.log('TimerComponent: Reset button clicked');
+        this.reset();
+      });
     }
+    
+    console.log('TimerComponent: Event listeners attached', {
+      startBtn: !!startBtn,
+      stopBtn: !!stopBtn,
+      resetBtn: !!resetBtn
+    });
   }
 
   /**

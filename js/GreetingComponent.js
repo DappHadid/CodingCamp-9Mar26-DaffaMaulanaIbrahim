@@ -43,13 +43,47 @@ class GreetingComponent {
     const timeStr = this.formatTime(now);
     const dateStr = this.formatDate(now);
     const greeting = this.getGreeting(hour);
+    const userName = this.getUserName();
 
     // Update DOM
     this.container.innerHTML = `
-      <div class="greeting-message">${greeting}</div>
+      <div class="greeting-message">${greeting}${userName ? ', ' + userName : ''}!</div>
       <div class="time-display">${timeStr}</div>
       <div class="date-display">${dateStr}</div>
+      <button class="edit-name-btn" title="Edit name">✏️</button>
     `;
+
+    // Attach event listener to edit name button
+    const editBtn = this.container.querySelector('.edit-name-btn');
+    if (editBtn) {
+      editBtn.addEventListener('click', () => this.promptForName());
+    }
+  }
+
+  /**
+   * Get user name from storage
+   * @returns {string} User name or empty string
+   */
+  getUserName() {
+    return StorageManager.get('userName', '');
+  }
+
+  /**
+   * Prompt user to enter their name
+   */
+  promptForName() {
+    const currentName = this.getUserName();
+    const newName = prompt('Enter your name (or leave empty to remove):', currentName);
+    
+    if (newName !== null) {
+      const trimmedName = newName.trim();
+      if (trimmedName === '') {
+        StorageManager.remove('userName');
+      } else {
+        StorageManager.set('userName', trimmedName);
+      }
+      this.updateTime();
+    }
   }
 
   /**

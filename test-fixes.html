@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Theme & Timer Fixes</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <style>
+        .test-section {
+            margin: 20px 0;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 8px;
+        }
+        
+        body.dark-theme .test-section {
+            background: rgba(44, 62, 80, 0.9);
+        }
+        
+        .status-box {
+            padding: 15px;
+            background: #f0f0f0;
+            border-radius: 5px;
+            margin: 10px 0;
+            font-family: monospace;
+            font-size: 14px;
+        }
+        
+        body.dark-theme .status-box {
+            background: #34495e;
+        }
+        
+        .success {
+            color: #27ae60;
+            font-weight: bold;
+        }
+        
+        .error {
+            color: #e74c3c;
+            font-weight: bold;
+        }
+        
+        .test-button {
+            padding: 10px 20px;
+            margin: 5px;
+            cursor: pointer;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+        
+        .test-button:hover {
+            background: #5568d3;
+        }
+    </style>
+</head>
+<body>
+    <main class="dashboard">
+        <header class="dashboard-header">
+            <h1>Theme & Timer Fix Verification</h1>
+        </header>
+
+        <section class="dashboard-content">
+            <!-- Theme Test Section -->
+            <div class="test-section">
+                <h2>Theme Toggle Test</h2>
+                <div class="status-box">
+                    <div>Body has 'dark-theme' class: <span id="theme-class-status">checking...</span></div>
+                    <div>Current theme: <span id="theme-current">checking...</span></div>
+                    <div>Background should be: <span id="theme-expected">purple gradient (light mode)</span></div>
+                </div>
+                <p><strong>Instructions:</strong></p>
+                <ol>
+                    <li>Look for the theme toggle button (🌙 or ☀️) in the top-right corner</li>
+                    <li>Click it - the background should change from purple to dark blue</li>
+                    <li>Click again - it should change back to purple</li>
+                    <li>Check the console (F12) for detailed logs</li>
+                </ol>
+                <button class="test-button" onclick="manualThemeToggle()">Manual Theme Toggle</button>
+                <button class="test-button" onclick="updateThemeStatus()">Refresh Status</button>
+            </div>
+
+            <!-- Timer Test Section -->
+            <div class="test-section">
+                <h2>Timer Test</h2>
+                <div id="timer-container" class="timer-component">
+                    <h3>Focus Timer</h3>
+                    <div class="timer-display"></div>
+                    <div class="timer-controls"></div>
+                </div>
+                <div class="status-box" style="margin-top: 20px;">
+                    <div>Timer state: <span id="timer-state">checking...</span></div>
+                    <div>Remaining time: <span id="timer-remaining">checking...</span></div>
+                </div>
+                <p><strong>Instructions:</strong></p>
+                <ol>
+                    <li>Click "Start" - timer should start counting down</li>
+                    <li>Click "Stop" - timer should pause (button should work!)</li>
+                    <li>Click "Start" again - timer should resume</li>
+                    <li>Click "Reset" - timer should reset to 25:00 (button should work!)</li>
+                    <li>Check the console (F12) for detailed logs</li>
+                </ol>
+                <button class="test-button" onclick="updateTimerStatus()">Refresh Timer Status</button>
+            </div>
+
+            <!-- Console Log Section -->
+            <div class="test-section">
+                <h2>Console Log (Last 10 messages)</h2>
+                <div id="console-log" class="status-box" style="max-height: 300px; overflow-y: auto;"></div>
+                <button class="test-button" onclick="clearConsoleLog()">Clear Log</button>
+            </div>
+        </section>
+    </main>
+
+    <!-- Load dependencies -->
+    <script src="js/PerformanceUtils.js"></script>
+    <script src="js/NotificationManager.js"></script>
+    <script src="js/BrowserCompatibility.js"></script>
+    <script src="js/StorageManager.js"></script>
+    <script src="js/ThemeManager.js"></script>
+    <script src="js/TimerComponent.js"></script>
+    
+    <script>
+        // Console logging
+        const logDiv = document.getElementById('console-log');
+        const originalConsoleLog = console.log;
+        const originalConsoleError = console.error;
+        const logs = [];
+        
+        function addLog(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            logs.push({ timestamp, message, type });
+            if (logs.length > 10) logs.shift();
+            
+            logDiv.innerHTML = logs.map(log => 
+                `<div style="color: ${log.type === 'error' ? '#e74c3c' : '#333'}; padding: 5px; border-bottom: 1px solid #ddd;">
+                    [${log.timestamp}] ${log.message}
+                </div>`
+            ).join('');
+            logDiv.scrollTop = logDiv.scrollHeight;
+        }
+        
+        console.log = function(...args) {
+            originalConsoleLog.apply(console, args);
+            addLog(args.join(' '), 'info');
+        };
+        
+        console.error = function(...args) {
+            originalConsoleError.apply(console, args);
+            addLog(args.join(' '), 'error');
+        };
+        
+        function clearConsoleLog() {
+            logs.length = 0;
+            logDiv.innerHTML = '<div style="color: #95a5a6; font-style: italic;">Log cleared</div>';
+        }
+        
+        // Theme status
+        function updateThemeStatus() {
+            const hasClass = document.body.classList.contains('dark-theme');
+            const current = hasClass ? 'dark' : 'light';
+            const expected = hasClass ? 'dark blue gradient (dark mode)' : 'purple gradient (light mode)';
+            
+            document.getElementById('theme-class-status').innerHTML = hasClass ? 
+                '<span class="success">YES</span>' : '<span class="error">NO</span>';
+            document.getElementById('theme-current').textContent = current;
+            document.getElementById('theme-expected').textContent = expected;
+        }
+        
+        function manualThemeToggle() {
+            if (typeof ThemeManager !== 'undefined') {
+                ThemeManager.toggleTheme();
+                updateThemeStatus();
+            } else {
+                alert('ThemeManager not loaded!');
+            }
+        }
+        
+        // Timer status
+        let timerComponent = null;
+        
+        function updateTimerStatus() {
+            if (timerComponent) {
+                document.getElementById('timer-state').textContent = timerComponent.state;
+                document.getElementById('timer-remaining').textContent = 
+                    timerComponent.formatTime(timerComponent.remaining);
+            }
+        }
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('=== Test Page Loaded ===');
+            
+            // Initialize theme
+            console.log('Initializing ThemeManager...');
+            ThemeManager.init();
+            
+            // Create theme toggle button
+            const header = document.querySelector('.dashboard-header');
+            if (header) {
+                ThemeManager.createToggleButton(header);
+            }
+            
+            // Initialize timer
+            console.log('Initializing TimerComponent...');
+            const timerContainer = document.getElementById('timer-container');
+            if (timerContainer) {
+                timerComponent = new TimerComponent(timerContainer);
+                timerComponent.init();
+            }
+            
+            // Update status
+            updateThemeStatus();
+            updateTimerStatus();
+            
+            // Update timer status every second
+            setInterval(updateTimerStatus, 1000);
+            
+            console.log('=== Initialization Complete ===');
+        });
+    </script>
+</body>
+</html>

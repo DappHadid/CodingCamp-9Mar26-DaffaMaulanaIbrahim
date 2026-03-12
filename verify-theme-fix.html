@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Theme Verification</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #333;
+            min-height: 100vh;
+            transition: all 0.3s ease;
+        }
+        
+        body.dark-theme {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: #ecf0f1;
+        }
+        
+        .test-box {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+        }
+        
+        body.dark-theme .test-box {
+            background: #2c3e50;
+            color: #ecf0f1;
+        }
+        
+        button {
+            padding: 10px 20px;
+            margin: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        
+        .status {
+            padding: 15px;
+            background: #f0f0f0;
+            border-radius: 5px;
+            margin: 10px 0;
+            font-family: monospace;
+        }
+        
+        body.dark-theme .status {
+            background: #34495e;
+        }
+    </style>
+</head>
+<body>
+    <h1>Theme Toggle Verification</h1>
+    
+    <div class="test-box">
+        <h2>Current Status</h2>
+        <div class="status">
+            <div>Body has 'dark-theme' class: <strong id="has-class">false</strong></div>
+            <div>Current theme: <strong id="current-theme">light</strong></div>
+            <div>Body background color: <strong id="bg-color">checking...</strong></div>
+        </div>
+    </div>
+    
+    <div class="test-box">
+        <h2>Manual Tests</h2>
+        <button onclick="addDarkClass()">Add dark-theme class</button>
+        <button onclick="removeDarkClass()">Remove dark-theme class</button>
+        <button onclick="toggleClass()">Toggle dark-theme class</button>
+        <button onclick="updateStatus()">Refresh Status</button>
+    </div>
+    
+    <div class="test-box">
+        <h2>Instructions</h2>
+        <ol>
+            <li>Click "Add dark-theme class" - background should turn dark blue</li>
+            <li>Click "Remove dark-theme class" - background should turn purple</li>
+            <li>Click "Toggle dark-theme class" - should switch between dark and light</li>
+            <li>Check the status box to see if the class is being applied</li>
+        </ol>
+    </div>
+
+    <script>
+        function updateStatus() {
+            const hasClass = document.body.classList.contains('dark-theme');
+            const bgColor = window.getComputedStyle(document.body).backgroundColor;
+            
+            document.getElementById('has-class').textContent = hasClass;
+            document.getElementById('current-theme').textContent = hasClass ? 'dark' : 'light';
+            document.getElementById('bg-color').textContent = bgColor;
+            
+            console.log('Status updated:', {
+                hasClass,
+                classList: Array.from(document.body.classList),
+                bgColor
+            });
+        }
+        
+        function addDarkClass() {
+            document.body.classList.add('dark-theme');
+            console.log('Added dark-theme class');
+            updateStatus();
+        }
+        
+        function removeDarkClass() {
+            document.body.classList.remove('dark-theme');
+            console.log('Removed dark-theme class');
+            updateStatus();
+        }
+        
+        function toggleClass() {
+            document.body.classList.toggle('dark-theme');
+            console.log('Toggled dark-theme class');
+            updateStatus();
+        }
+        
+        // Initial status
+        updateStatus();
+        
+        // Update status every second
+        setInterval(updateStatus, 1000);
+    </script>
+</body>
+</html>

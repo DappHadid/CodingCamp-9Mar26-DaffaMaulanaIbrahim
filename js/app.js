@@ -15,7 +15,12 @@ let quickLinksComponent = null;
  */
 function initializeApp() {
   try {
-    // Run browser compatibility checks first
+    // Initialize theme first (before any components render)
+    console.log('Initializing ThemeManager...');
+    ThemeManager.init();
+    console.log('ThemeManager initialized');
+    
+    // Run browser compatibility checks
     const compatibilityReport = BrowserCompatibility.initialize();
     
     // Continue with initialization even if not fully compatible
@@ -63,6 +68,16 @@ function initializeApp() {
     if (quickLinksContainer) {
       quickLinksComponent = new QuickLinksComponent(quickLinksContainer);
       quickLinksComponent.init();
+    }
+
+    // Add theme toggle button to header
+    const header = document.querySelector('.dashboard-header');
+    if (header) {
+      console.log('Creating theme toggle button...');
+      ThemeManager.createToggleButton(header);
+      console.log('Theme toggle button created');
+    } else {
+      console.error('Dashboard header not found - cannot create theme toggle button');
     }
 
     console.log('Application initialized successfully');
